@@ -47,6 +47,14 @@
       width: 122px;
     }
   </style>
+
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "9099e871454c45eab3120cff09705d03"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>
 </head>
 
 <body>
@@ -89,19 +97,168 @@
 
   <script>
     let form = document.querySelector('form');
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log("Global Error Caught!");
+      console.log("Message:", message);
+      console.log("Source:", source);
+      console.log("Line:", lineno, "Col:", colno);
+      console.log("Error object:", error);
+      return true;
+    };
+
+    class InputValidationError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = "InputValidationError"; // Sets the error name
+      }
+    }
+
     form.addEventListener('submit', e => {
       e.preventDefault();
       let output = document.querySelector('output');
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+       try {
+        // Validate inputs
+        if (firstNum.trim() === "" || secondNum.trim() === "") {
+          throw new InputValidationError("Both input fields are required.");
+        }
+
+        if (isNaN(firstNum) || isNaN(secondNum)) {
+          throw new InputValidationError("Inputs must be valid numbers.");
+        }
+
+        // Try calculation
+        const result = eval(`${firstNum} ${operator} ${secondNum}`);
+
+        // Check result is finite (e.g., avoid divide by zero)
+        if (!isFinite(result)) {
+          throw new Error("Math error: Division by zero or invalid operation.");
+        }
+
+        output.innerHTML = result;
+
+      } catch (err) {
+        if (err instanceof InputValidationError) {
+          console.warn(`Validation issue: ${err.message}`);
+        } else {
+          console.error("Unexpected error:", err);
+        }
+        output.innerHTML = `Error: ${err.message}`;
+      } finally {
+        console.log("Calculation attempted.");
+      }
     });
+
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+    let count = 0;
+    let timerStarted = false;
+
+    errorBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const label = btn.textContent.trim();
+
+        switch (label) {
+          case "Console Log":
+            console.log("This is a console log message.");
+            break;
+
+          case "Console Error":
+            console.error("This is a console error message.");
+            break;
+
+          case "Console Count":
+            console.count("Console Count");
+            break;
+
+          case "Console Warn":
+            console.warn("This is a console warning!");
+            break;
+
+          case "Console Assert":
+            const x = 2;
+            console.assert(x === 3, "Assertion failed: x is not 3");
+            break;
+
+          case "Console Clear":
+            console.clear();
+            break;
+
+          case "Console Dir":
+            const button = document.querySelector("#error-btns button");
+            console.dir(button);
+            break;
+
+          case "Console dirxml":
+            const section = document.querySelector("#error-btns button");
+            console.dirxml(section);
+            break;
+
+          case "Console Group Start":
+            console.group("Grouped Logs");
+            console.log("Inside group 1");
+            console.log("Inside group 2");
+            break;
+
+          case "Console Group End":
+            console.groupEnd();
+            break;
+
+          case "Console Table":
+            const data = [
+              { name: "Alice", age: 22 },
+              { name: "Bob", age: 27 },
+            ];
+            console.table(data);
+            break;
+
+          case "Start Timer":
+            if (!timerStarted) {
+              console.time("Demo Timer");
+              timerStarted = true;
+            } else {
+              console.warn("Timer already started!");
+            }
+            break;
+
+          case "End Timer":
+            if (timerStarted) {
+              console.timeEnd("Demo Timer");
+              timerStarted = false;
+            } else {
+              console.warn("Timer was not started.");
+            }
+            break;
+
+          case "Console Trace":
+            function a() { b(); }
+            function b() { c(); }
+            function c() { console.trace("Trace example"); }
+            a();
+            break;
+
+          case "Trigger a Global Error":
+            // Trigger an undefined function call
+            nonExistentFunction();
+            break;
+        }
+      });
+    });
+
+    // Global error handler
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log("Global error caught:");
+      console.log("Message:", message);
+      console.log("Source:", source);
+      console.log("Line:", lineno, "Col:", colno);
+      console.log("Error object:", error);
+    };
   </script>
 </body>
 
